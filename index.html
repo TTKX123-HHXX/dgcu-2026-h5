@@ -19,7 +19,7 @@
     <meta name="twitter:image" content="./share-card.jpg" />
     <link rel="image_src" href="./share-card.jpg" />
     <link rel="apple-touch-icon" href="./share-card.jpg" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260531-speed2" />
   </head>
   <body>
     <main class="app-shell" aria-label="东莞城市学院招生 H5">
@@ -27,7 +27,11 @@
         <img id="pageImage" class="page-image" alt="" draggable="false" />
         <div id="choicePage" class="choice-page" hidden></div>
         <div id="hotspots" class="hotspots" aria-label="当前页面可点击区域"></div>
-        <audio id="bgMusic" src="./Soulloom苏洛牧 - 初晴 (V0).mp3" preload="auto" autoplay loop></audio>
+        <div id="pageLoading" class="page-loading" hidden>
+          <span></span>
+          <strong>加载中</strong>
+        </div>
+        <audio id="bgMusic" src="./bgm-lite.mp3" preload="metadata" autoplay loop></audio>
         <nav class="quick-nav" aria-label="快捷导航">
           <button id="backBtn" class="nav-btn nav-btn-back" type="button" aria-label="返回上一页" hidden>返回</button>
           <button id="homeBtn" class="nav-btn" type="button" hidden>首页</button>
@@ -50,6 +54,6 @@
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <script src="./app.js"></script>
+    <script src="./app.js?v=20260531-speed2"></script>
   </body>
 </html>

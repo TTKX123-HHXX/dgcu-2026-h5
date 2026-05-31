@@ -218,6 +218,7 @@
   const pageImage = document.getElementById("pageImage");
   const choicePage = document.getElementById("choicePage");
   const hotspotsEl = document.getElementById("hotspots");
+  const pageLoading = document.getElementById("pageLoading");
   const backBtn = document.getElementById("backBtn");
   const homeBtn = document.getElementById("homeBtn");
   const contactBtn = document.getElementById("contactBtn");
@@ -231,6 +232,7 @@
   let currentPage = "home";
   let toastTimer = 0;
   let musicEnabled = true;
+  let renderToken = 0;
   const preloadedImages = new Set();
 
   if (new URLSearchParams(window.location.search).has("debug")) {
@@ -239,6 +241,7 @@
 
   function renderPage(pageId, shouldPush = true) {
     const nextPage = pages[pageId] ? pageId : "home";
+    const token = ++renderToken;
 
     if (shouldPush && currentPage !== nextPage) {
       historyStack.push(currentPage);
@@ -254,23 +257,39 @@
       pageImage.removeAttribute("src");
       pageImage.alt = page.title;
       pageImage.classList.remove("is-changing");
+      setLoading(false);
       renderHotspots([]);
       renderChoice(page);
     } else {
       choicePage.hidden = true;
+      renderHotspots([]);
+      setLoading(true);
       pageImage.classList.add("is-changing");
-
-      window.setTimeout(() => {
-        pageImage.src = imageBase + page.image;
-        pageImage.alt = page.title;
-        renderHotspots(page.hotspots || []);
-        pageImage.classList.remove("is-changing");
-      }, 120);
+      loadPageImage(page.image)
+        .then(() => {
+          if (token !== renderToken) return;
+          pageImage.src = imageBase + page.image;
+          pageImage.alt = page.title;
+          renderHotspots(page.hotspots || []);
+        })
+        .catch(() => {
+          if (token !== renderToken) return;
+          pageImage.src = imageBase + page.image;
+          pageImage.alt = page.title;
+          renderHotspots(page.hotspots || []);
+        })
+        .finally(() => {
+          if (token !== renderToken) return;
+          pageImage.classList.remove("is-changing");
+          setLoading(false);
+        });
     }
 
     backBtn.disabled = historyStack.length === 0;
     homeBtn.disabled = currentPage === "home";
-    schedulePreload(currentPage);
+    if (currentPage !== "home") {
+      schedulePreload(currentPage);
+    }
   }
 
   function renderChoice(page) {
@@ -335,6 +354,27 @@
     choicePage.appendChild(wrap);
   }
 
+  function setLoading(isLoading) {
+    pageLoading.hidden = !isLoading;
+    hotspotsEl.style.pointerEvents = isLoading ? "none" : "";
+  }
+
+  function loadPageImage(image) {
+    const src = imageBase + image;
+    return new Promise((resolve, reject) => {
+      if (!image) {
+        resolve();
+        return;
+      }
+
+      const img = new Image();
+      img.decoding = "async";
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
   function renderHotspots(hotspots) {
     hotspotsEl.innerHTML = "";
     hotspots.forEach((spot) => {
@@ -371,7 +411,7 @@
 
     links.delete("");
     links.delete(pageId);
-    return Array.from(links).slice(0, 4);
+    return Array.from(links).slice(0, 2);
   }
 
   function preloadPageImage(pageId) {
@@ -388,7 +428,7 @@
     const page = pages[pageId];
     if (!page || !page.actions) return;
 
-    page.actions.forEach((item) => {
+    page.actions.slice(0, 2).forEach((item) => {
       if (!item.image || preloadedImages.has(item.image)) return;
       preloadedImages.add(item.image);
       const img = new Image();
