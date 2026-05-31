@@ -82,7 +82,6 @@
       image: "publicimagesmoremore-school-profile.webp",
       stage: "why",
       layer: "第二层 · 学校认识页",
-      autoAdvance: { target: "schoolChoice", delay: 5000 },
       hotspots: [
         { label: "了解学校概况", x: 13, y: 86.1, w: 74, h: 8.2, action: "go", target: "schoolChoice" },
       ],
@@ -217,7 +216,6 @@
   };
 
   const pageImage = document.getElementById("pageImage");
-  const phoneStage = document.querySelector(".phone-stage");
   const choicePage = document.getElementById("choicePage");
   const hotspotsEl = document.getElementById("hotspots");
   const backBtn = document.getElementById("backBtn");
@@ -232,7 +230,6 @@
   const historyStack = [];
   let currentPage = "home";
   let toastTimer = 0;
-  let autoAdvanceTimer = 0;
   let musicEnabled = true;
   const preloadedImages = new Set();
 
@@ -241,7 +238,6 @@
   }
 
   function renderPage(pageId, shouldPush = true) {
-    clearAutoAdvance();
     const nextPage = pages[pageId] ? pageId : "home";
 
     if (shouldPush && currentPage !== nextPage) {
@@ -275,7 +271,6 @@
     backBtn.disabled = historyStack.length === 0;
     homeBtn.disabled = currentPage === "home";
     schedulePreload(currentPage);
-    scheduleAutoAdvance(currentPage);
   }
 
   function renderChoice(page) {
@@ -409,25 +404,6 @@
     }, 420);
   }
 
-  function clearAutoAdvance() {
-    window.clearTimeout(autoAdvanceTimer);
-    autoAdvanceTimer = 0;
-  }
-
-  function runAutoAdvance() {
-    const page = pages[currentPage];
-    if (!page || !page.autoAdvance) return;
-
-    renderPage(page.autoAdvance.target);
-  }
-
-  function scheduleAutoAdvance(pageId) {
-    const page = pages[pageId];
-    if (!page || !page.autoAdvance) return;
-
-    autoAdvanceTimer = window.setTimeout(runAutoAdvance, page.autoAdvance.delay || 5000);
-  }
-
   function renderStage() {
     const page = pages[currentPage];
     const activeStage = page.stage || "home";
@@ -510,10 +486,6 @@
   backBtn.addEventListener("click", goBack);
   homeBtn.addEventListener("click", () => renderPage("home"));
   contactBtn.addEventListener("click", () => renderPage("contact"));
-  phoneStage.addEventListener("pointerdown", (event) => {
-    if (event.target.closest(".nav-btn")) return;
-    if (pages[currentPage]?.autoAdvance) runAutoAdvance();
-  });
   document.addEventListener("pointerdown", () => {
     if (musicEnabled) playMusic();
   }, { once: true });
