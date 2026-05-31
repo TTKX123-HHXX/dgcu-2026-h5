@@ -82,6 +82,7 @@
       image: "publicimagesmoremore-school-profile.webp",
       stage: "why",
       layer: "第二层 · 学校认识页",
+      autoAdvance: { target: "schoolChoice", delay: 5000 },
       hotspots: [
         { label: "了解学校概况", x: 13, y: 86.1, w: 74, h: 8.2, action: "go", target: "schoolChoice" },
       ],
@@ -96,13 +97,13 @@
       eyebrow: "来自第3页 · 继续了解学校",
       variant: "school",
       actions: [
-        { title: "教学设施", desc: "教学空间、实训平台与学习环境。", target: "campus", tone: "blue", image: "publicimagessections09-campus-learning.webp" },
-        { title: "师资队伍", desc: "教师队伍、教学支持与育人力量。", target: "faculty", tone: "green", image: "publicimagesmoremore-faculty.webp" },
-        { title: "科研能力", desc: "科研平台、实践项目与社会服务。", target: "research", tone: "purple", image: "publicimagesmoremore-research.webp" },
-        { title: "培养体系", desc: "学生成长、就业发展与培养成果。", target: "trainingResults", tone: "orange", image: "publicimagesmoremore-training-results.webp" },
-        { title: "校园文化", desc: "社团活动、竞赛舞台与青春氛围。", target: "campusCulture", tone: "green", image: "publicimagesmoremore-campus-culture.webp" },
-        { title: "国际视野", desc: "国际交流、合作办学与海外资源。", target: "international", tone: "blue", image: "publicimagesmoremore-international.webp" },
-        { title: "印象城院", desc: "校园风光、湖畔场景与城院记忆。", target: "campusScenery", tone: "purple", image: "publicimagesmoremore-campus-scenery.webp" },
+        { title: "教学设施", desc: "教学空间、实训平台与学习环境。", target: "campus", tone: "blue", image: "school-card-facilities.webp" },
+        { title: "师资队伍", desc: "教师队伍、教学支持与育人力量。", target: "faculty", tone: "green", image: "school-card-faculty.webp" },
+        { title: "科研能力", desc: "科研平台、实践项目与社会服务。", target: "research", tone: "purple", image: "school-card-research.webp" },
+        { title: "培养体系", desc: "学生成长、就业发展与培养成果。", target: "trainingResults", tone: "orange", image: "school-card-training.webp" },
+        { title: "校园文化", desc: "社团活动、竞赛舞台与青春氛围。", target: "campusCulture", tone: "green", image: "school-card-culture.webp" },
+        { title: "国际视野", desc: "国际交流、合作办学与海外资源。", target: "international", tone: "blue", image: "school-card-international.webp" },
+        { title: "印象城院", desc: "校园风光、湖畔场景与城院记忆。", target: "campusScenery", tone: "purple", image: "school-card-scenery.webp" },
       ],
     },
     directions: {
@@ -216,6 +217,7 @@
   };
 
   const pageImage = document.getElementById("pageImage");
+  const phoneStage = document.querySelector(".phone-stage");
   const choicePage = document.getElementById("choicePage");
   const hotspotsEl = document.getElementById("hotspots");
   const backBtn = document.getElementById("backBtn");
@@ -230,6 +232,7 @@
   const historyStack = [];
   let currentPage = "home";
   let toastTimer = 0;
+  let autoAdvanceTimer = 0;
   let musicEnabled = true;
   const preloadedImages = new Set();
 
@@ -238,6 +241,7 @@
   }
 
   function renderPage(pageId, shouldPush = true) {
+    clearAutoAdvance();
     const nextPage = pages[pageId] ? pageId : "home";
 
     if (shouldPush && currentPage !== nextPage) {
@@ -271,6 +275,7 @@
     backBtn.disabled = historyStack.length === 0;
     homeBtn.disabled = currentPage === "home";
     schedulePreload(currentPage);
+    scheduleAutoAdvance(currentPage);
   }
 
   function renderChoice(page) {
@@ -283,7 +288,7 @@
 
     const logo = document.createElement("img");
     logo.className = "choice-logo";
-    logo.src = `${imageBase}publicimagescommonlogo-dgcu.png.webp`;
+    logo.src = `${imageBase}publicimagescommonlogo-dgcu.png.png`;
     logo.alt = "东莞城市学院";
 
     const eyebrow = document.createElement("p");
@@ -404,6 +409,25 @@
     }, 420);
   }
 
+  function clearAutoAdvance() {
+    window.clearTimeout(autoAdvanceTimer);
+    autoAdvanceTimer = 0;
+  }
+
+  function runAutoAdvance() {
+    const page = pages[currentPage];
+    if (!page || !page.autoAdvance) return;
+
+    renderPage(page.autoAdvance.target);
+  }
+
+  function scheduleAutoAdvance(pageId) {
+    const page = pages[pageId];
+    if (!page || !page.autoAdvance) return;
+
+    autoAdvanceTimer = window.setTimeout(runAutoAdvance, page.autoAdvance.delay || 5000);
+  }
+
   function renderStage() {
     const page = pages[currentPage];
     const activeStage = page.stage || "home";
@@ -486,6 +510,10 @@
   backBtn.addEventListener("click", goBack);
   homeBtn.addEventListener("click", () => renderPage("home"));
   contactBtn.addEventListener("click", () => renderPage("contact"));
+  phoneStage.addEventListener("pointerdown", (event) => {
+    if (event.target.closest(".nav-btn")) return;
+    if (pages[currentPage]?.autoAdvance) runAutoAdvance();
+  });
   document.addEventListener("pointerdown", () => {
     if (musicEnabled) playMusic();
   }, { once: true });
